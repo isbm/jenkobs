@@ -1,9 +1,15 @@
 package jenkobs_reactor
 
-type ReactorAction struct {
+const (
+	ACTION_TYPE_CI    = "ci"
+	ACTION_TYPE_SHELL = "shell"
+)
+
+type ActionInfo struct {
 	Project      string
 	Package      string
 	Status       string
 	Architecture string
-	Action       map[string]interface{}
+	Type         string
+	Params       map[string]string
 }
