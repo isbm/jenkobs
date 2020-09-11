@@ -16,6 +16,8 @@ type Reactor struct {
 	password string
 	fqdn     string
 	port     int
+
+	wzlib_logger.WzLogger
 }
 
 func NewReactor() *Reactor {
@@ -35,7 +37,7 @@ func (rtr *Reactor) SetAMQPDial(user string, password string, fqdn string, port 
 func (rtr *Reactor) connectAMQP() error {
 	if rtr.user == "" || rtr.fqdn == "" {
 		err := fmt.Errorf("Error connecting to the AMQP server: user or FQDN are missing")
-		wzlib_logger.GetCurrentLogger().Error(err.Error())
+		rtr.GetLogger().Error(err.Error())
 		return err
 	}
 	var err error
@@ -47,36 +49,36 @@ func (rtr *Reactor) connectAMQP() error {
 	}
 	rtr.conn, err = amqp.Dial(connstr)
 	if err != nil {
-		wzlib_logger.GetCurrentLogger().Errorf("Error connecting to the AMQP server: %s", err.Error())
+		rtr.GetLogger().Errorf("Error connecting to the AMQP server: %s", err.Error())
 		return err
 	} else {
-		wzlib_logger.GetCurrentLogger().Infof("Connected to AMQP at %s", rtr.fqdn)
+		rtr.GetLogger().Infof("Connected to AMQP at %s", rtr.fqdn)
 	}
 
 	// Setup channel
 	rtr.channel, err = rtr.conn.Channel()
 	err = rtr.channel.ExchangeDeclarePassive("pubsub", "topic", true, false, false, false, nil)
 	if err != nil {
-		wzlib_logger.GetCurrentLogger().Errorf("Error creating AMQP channel: %s", err.Error())
+		rtr.GetLogger().Errorf("Error creating AMQP channel: %s", err.Error())
 		return err
 	} else {
-		wzlib_logger.GetCurrentLogger().Infof("Created AMQP channel")
+		rtr.GetLogger().Infof("Created AMQP channel")
 	}
 
 	// Setup queue
 	rtr.queue, err = rtr.channel.QueueDeclare("", false, false, true, false, nil)
 	if err != nil {
-		wzlib_logger.GetCurrentLogger().Errorf("Error setting up queue: %s", err.Error())
+		rtr.GetLogger().Errorf("Error setting up queue: %s", err.Error())
 		return err
 	} else {
-		wzlib_logger.GetCurrentLogger().Infof("Default queue declared")
+		rtr.GetLogger().Infof("Default queue declared")
 	}
 
 	if err = rtr.channel.QueueBind(rtr.queue.Name, "#", "pubsub", false, nil); err != nil {
-		wzlib_logger.GetCurrentLogger().Errorf("Error binding queue '%s' to the channel: %s", rtr.queue.Name, err.Error())
+		rtr.GetLogger().Errorf("Error binding queue '%s' to the channel: %s", rtr.queue.Name, err.Error())
 		return err
 	} else {
-		wzlib_logger.GetCurrentLogger().Infof("Bound queue '%s' to the channel", rtr.queue.Name)
+		rtr.GetLogger().Infof("Bound queue '%s' to the channel", rtr.queue.Name)
 	}
 
 	return nil
@@ -95,7 +97,7 @@ func (rtr *Reactor) consume() error {
 	looper := make(chan bool)
 
 	go func() {
-		wzlib_logger.GetCurrentLogger().Debug("Listening to the events...")
+		rtr.GetLogger().Debug("Listening to the events...")
 		for data := range msgChannel {
 			fmt.Println(string(data.Body))
 			fmt.Println("---")
@@ -111,7 +113,7 @@ func (rtr *Reactor) Run() error {
 	if err := rtr.connectAMQP(); err == nil {
 		defer rtr.conn.Close()
 		if err := rtr.consume(); err != nil {
-			wzlib_logger.GetCurrentLogger().Errorf("Error consuming messages: %s", err.Error())
+			rtr.GetLogger().Errorf("Error consuming messages: %s", err.Error())
 		}
 	}
 
