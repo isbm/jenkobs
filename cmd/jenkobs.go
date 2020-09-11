@@ -28,9 +28,9 @@ func listenOBS(ctx *cli.Context) error {
 	wzlib_logger.GetCurrentLogger().Debug("Connecting to the AMQP")
 
 	amqpConf := conf.Find("amqp")
-	reactor := jenkobs_reactor.NewReactor().SetAMQPDial(amqpConf.String("username", ""),
-		amqpConf.String("password", ""), amqpConf.String("fqdn", ""), amqpConf.DefaultInt("port", "", 5672))
-	reactor.Run()
+	jenkobs_reactor.NewReactor().SetAMQPDial(amqpConf.String("username", ""),
+		amqpConf.String("password", ""), amqpConf.String("fqdn", ""),
+		amqpConf.DefaultInt("port", "", 5672)).LoadActions(conf.Root().String("actions", "")).Run()
 	return nil
 }
 
