@@ -2,6 +2,10 @@ package jenkobs_reactor
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+
+	"gopkg.in/yaml.v2"
 
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/streadway/amqp"
@@ -11,6 +15,7 @@ type Reactor struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
 	queue   amqp.Queue
+	actions []ReactorAction
 
 	user     string
 	password string
@@ -22,6 +27,7 @@ type Reactor struct {
 
 func NewReactor() *Reactor {
 	rtr := new(Reactor)
+	rtr.actions = make([]ReactorAction, 0)
 	return rtr
 }
 
@@ -84,9 +90,85 @@ func (rtr *Reactor) connectAMQP() error {
 	return nil
 }
 
+func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
+	// Always only one element anyways
+	for key, data := range actionSet {
+		actionData := data.(map[interface{}]interface{})
+		params := make(map[string]string)
+
+		var actionType string
+		for pkey, pval := range actionData["action"].(map[interface{}]interface{}) {
+			spkey := pkey.(string)
+			if spkey == "type" {
+				actionType = pval.(string)
+			} else {
+				params[spkey] = pval.(string)
+			}
+		}
+
+		action := &ActionInfo{
+			Project:      key,
+			Package:      actionData["package"].(string),
+			Status:       actionData["status"].(string),
+			Architecture: actionData["arch"].(string),
+			Params:       params,
+			Type:         actionType,
+		}
+		if actionType == "" {
+			rtr.GetLogger().Warnf("Action on project '%s' with package '%s' does not have defined action type, skipping",
+				action.Project, action.Package)
+			return nil
+		} else {
+			return action
+		}
+	}
+	return nil
+}
+
 // LoadConfig of the reactor
-func (rtr *Reactor) LoadActions() *Reactor {
+func (rtr *Reactor) LoadActions(actionsCfgPath string) *Reactor {
+	content, err := ioutil.ReadFile(actionsCfgPath)
+	if err != nil {
+		rtr.GetLogger().Errorf("Unable to load actions: %s", err.Error())
+		os.Exit(1)
+	}
+
+	var data []map[string]interface{}
+	if err := yaml.Unmarshal(content, &data); err != nil {
+		rtr.GetLogger().Errorf("Unable to read actions configuration: %s", err.Error())
+	}
+	var loaded int
+	for _, actionSet := range data {
+		action := rtr.getAction(actionSet)
+		if action != nil {
+			switch action.Type {
+			case ACTION_TYPE_CI:
+				httpAction := NewHTTPAction()
+				httpAction.LoadAction(action)
+				rtr.actions = append(rtr.actions, httpAction)
+				loaded++
+				rtr.GetLogger().Debugf("Loaded criteria HTTP matcher for project '%s'", action.Project)
+			case ACTION_TYPE_SHELL:
+				shellAction := NewShellAction()
+				shellAction.LoadAction(action)
+				rtr.actions = append(rtr.actions, shellAction)
+				loaded++
+				rtr.GetLogger().Debugf("Loaded criteria Shell matcher for project '%s'", action.Project)
+			default:
+				rtr.GetLogger().Errorf("Unknown action type: %s for action %s", action.Type, action.Project)
+			}
+		}
+	}
+	rtr.GetLogger().Infof("Loaded %d matchers", loaded)
 	return rtr
+}
+
+func (rtr *Reactor) onDelivery(delivery amqp.Delivery) error {
+	for _, action := range rtr.actions {
+		rtr.GetLogger().Debugf("Processing action %s", action.GetAction().Type)
+		go action.OnMessage(&delivery)
+	}
+	return nil
 }
 
 func (rtr *Reactor) consume() error {
@@ -98,9 +180,8 @@ func (rtr *Reactor) consume() error {
 
 	go func() {
 		rtr.GetLogger().Debug("Listening to the events...")
-		for data := range msgChannel {
-			fmt.Println(string(data.Body))
-			fmt.Println("---")
+		for delivery := range msgChannel {
+			go rtr.onDelivery(delivery)
 		}
 	}()
 
