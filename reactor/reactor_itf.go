@@ -4,8 +4,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type ReactorActionItf interface {
-	GetType() string
-	Load(data map[string]interface{})
+type ReactorAction interface {
+	GetAction() *ActionInfo
+	LoadAction(action *ActionInfo)
 	OnMessage(message *amqp.Delivery)
 }
