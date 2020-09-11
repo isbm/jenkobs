@@ -11,4 +11,5 @@ require (
 	github.com/streadway/amqp v1.0.0
 	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/sys v0.0.0-20200909081042-eff7692f9009 // indirect
+	gopkg.in/yaml.v2 v2.3.0
 )
