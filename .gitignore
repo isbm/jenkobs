@@ -1,4 +1,5 @@
 cmd/jenkobs
 docs/_*
-scripts/jenkobs-venv
+scripts
+
 
