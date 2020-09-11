@@ -5,6 +5,7 @@ import (
 
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	"github.com/isbm/go-nanoconf"
+	jenkobs_reactor "github.com/isbm/jenkobs/reactor"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -23,7 +24,13 @@ func setLogger(ctx *cli.Context) {
 
 func listenOBS(ctx *cli.Context) error {
 	setLogger(ctx)
+	conf := nanoconf.NewConfig(ctx.String("config"))
+	wzlib_logger.GetCurrentLogger().Debug("Connecting to the AMQP")
 
+	amqpConf := conf.Find("amqp")
+	reactor := jenkobs_reactor.NewReactor().SetAMQPDial(amqpConf.String("username", ""),
+		amqpConf.String("password", ""), amqpConf.String("fqdn", ""), amqpConf.DefaultInt("port", "", 5672))
+	reactor.Run()
 	return nil
 }
 
