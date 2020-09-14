@@ -11,5 +11,5 @@ type ActionInfo struct {
 	Status       string
 	Architecture string
 	Type         string
-	Params       map[string]string
+	Params       map[string]interface{}
 }
