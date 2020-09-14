@@ -94,7 +94,7 @@ func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
 	// Always only one element anyways
 	for key, data := range actionSet {
 		actionData := data.(map[interface{}]interface{})
-		params := make(map[string]string)
+		params := make(map[string]interface{})
 
 		var actionType string
 		for pkey, pval := range actionData["action"].(map[interface{}]interface{}) {
@@ -102,7 +102,32 @@ func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
 			if spkey == "type" {
 				actionType = pval.(string)
 			} else {
-				params[spkey] = pval.(string)
+				switch actionType {
+				case "ci":
+					cmdKeysItf, ok := pval.(string)
+					if ok {
+						params[spkey] = cmdKeysItf
+					} else {
+						rtr.GetLogger().Error("HTTP action should accept key/value parameters!")
+						return nil
+					}
+				case "shell":
+					// Params are string array just like a typical command line
+					cmdKeysItf, ok := pval.([]interface{})
+					if ok {
+						cmdParams := make([]string, 0)
+						for _, cmdParam := range cmdKeysItf {
+							cmdParams = append(cmdParams, cmdParam.(string))
+						}
+						params[spkey] = cmdParams
+					} else {
+						rtr.GetLogger().Error("Command should be an array of strings in the action definition!")
+						return nil
+					}
+				case "":
+				default:
+					rtr.GetLogger().Errorf("Unsupported action type: %s", actionType)
+				}
 			}
 		}
 
@@ -164,9 +189,11 @@ func (rtr *Reactor) LoadActions(actionsCfgPath string) *Reactor {
 }
 
 func (rtr *Reactor) onDelivery(delivery amqp.Delivery) error {
-	for _, action := range rtr.actions {
-		rtr.GetLogger().Debugf("Processing action %s", action.GetAction().Type)
-		go action.OnMessage(&delivery)
+	rd := NewReactorDelivery(&delivery)
+	if rd.IsValid() { // Some messages from OBS simply aren't JSON. :-(
+		for _, action := range rtr.actions {
+			go action.OnMessage(rd)
+		}
 	}
 	return nil
 }
