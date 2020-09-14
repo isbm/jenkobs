@@ -1,7 +1,5 @@
 package jenkobs_reactor
 
-import "github.com/streadway/amqp"
-
 /*
 	HTTP Action calls specified URL if criterion meets
 */
@@ -28,6 +26,6 @@ func (hta *HTTPAction) LoadAction(action *ActionInfo) {
 }
 
 // OnMessage when delivery comes, match the criteria according to the action info
-func (hta *HTTPAction) OnMessage(message *amqp.Delivery) {
-
+func (hta *HTTPAction) OnMessage(message *ReactorDelivery) error {
+	return nil
 }
