@@ -21,7 +21,7 @@ import (
 
 // ShellAction object
 type ShellAction struct {
-	actionInfo *ActionInfo
+	BaseAction
 	wzlib_logger.WzLogger
 }
 
@@ -29,16 +29,6 @@ type ShellAction struct {
 func NewShellAction() *ShellAction {
 	shellAction := new(ShellAction)
 	return shellAction
-}
-
-// GetAction info on request for this action object
-func (shact *ShellAction) GetAction() *ActionInfo {
-	return shact.actionInfo
-}
-
-// LoadAction info
-func (shact *ShellAction) LoadAction(action *ActionInfo) {
-	shact.actionInfo = action
 }
 
 // Format command from the parameters.
@@ -84,10 +74,10 @@ func (shact *ShellAction) OnMessage(message *ReactorDelivery) error {
 		return fmt.Errorf("Skipping invalid message")
 	}
 
-	if message.GetDelivery().RoutingKey == shact.actionInfo.Status {
+	if shact.Matches(message) {
 		cmd := shact.formatCommand(message)
 		return shact.callShellCommand(cmd[0], cmd[1:]...)
 	}
 
-	return nil // Didn't match the criteria
+	return nil
 }
