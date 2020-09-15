@@ -13,6 +13,45 @@ type ReactorAction interface {
 	OnMessage(message *ReactorDelivery) error
 }
 
+type BaseAction struct {
+	actionInfo *ActionInfo
+	wzlib_logger.WzLogger
+}
+
+// Matches the criteria in the actions configuration
+func (bsa *BaseAction) Matches(message *ReactorDelivery) bool {
+	// Matches status
+	if message.GetDelivery().RoutingKey != bsa.actionInfo.Status {
+		return false
+	}
+
+	// Matches Project. To match any projects, use "*"
+	if bsa.actionInfo.Project != "*" && message.GetProjectName() != bsa.actionInfo.Project {
+		return false
+	}
+
+	// Matches Architecture (if defined)
+	if bsa.actionInfo.Architecture != "" && bsa.actionInfo.Architecture != message.GetArch() {
+		return false
+	}
+
+	// Matches Package (if defined)
+	if bsa.actionInfo.Package != "" && bsa.actionInfo.Package != message.GetPackageName() {
+		return false
+	}
+	return true
+}
+
+// GetAction info on request for this action object
+func (bsa *BaseAction) GetAction() *ActionInfo {
+	return bsa.actionInfo
+}
+
+// LoadAction info
+func (bsa *BaseAction) LoadAction(action *ActionInfo) {
+	bsa.actionInfo = action
+}
+
 type ReactorDelivery struct {
 	content  map[string]interface{}
 	delivery *amqp.Delivery
