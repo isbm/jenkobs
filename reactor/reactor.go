@@ -146,11 +146,30 @@ func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
 			}
 		}
 
+		var packageName string
+		var archName string
+		var statusName string
+
+		if actionData["package"] != nil {
+			packageName = actionData["package"].(string)
+		}
+
+		if actionData["arch"] != nil {
+			archName = actionData["arch"].(string)
+		}
+
+		if actionData["status"] != nil {
+			statusName = actionData["status"].(string)
+		} else {
+			rtr.GetLogger().Warnf("Action on project '%s' has no defined status, skipping", key)
+			return nil
+		}
+
 		action := &ActionInfo{
 			Project:      key,
-			Package:      actionData["package"].(string),
-			Status:       actionData["status"].(string),
-			Architecture: actionData["arch"].(string),
+			Package:      packageName,
+			Status:       statusName,
+			Architecture: archName,
 			Params:       params,
 			Type:         actionType,
 		}
