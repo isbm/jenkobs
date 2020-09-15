@@ -104,12 +104,27 @@ func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
 			} else {
 				switch actionType {
 				case "ci":
-					cmdKeysItf, ok := pval.(string)
+					// Params are key/value with nested key/value for query params
+					paramsItf, ok := pval.(map[interface{}]interface{})
 					if ok {
-						params[spkey] = cmdKeysItf
+						paramsSet := make(map[string]interface{})
+						for cmdKey, cmdVal := range paramsItf {
+							if cmdKey.(string) == "params" {
+								queryParams := make(map[string]interface{})
+								if cmdVal != nil {
+									for qp, qv := range cmdVal.(map[interface{}]interface{}) {
+										queryParams[qp.(string)] = qv
+									}
+								}
+								paramsSet["params"] = queryParams
+
+							} else {
+								paramsSet[cmdKey.(string)] = cmdVal
+							}
+						}
+						params[spkey] = paramsSet
 					} else {
-						rtr.GetLogger().Error("HTTP action should accept key/value parameters!")
-						return nil
+						rtr.GetLogger().Error("HTTP action does not have a proper caller configuration")
 					}
 				case "shell":
 					// Params are string array just like a typical command line
