@@ -1,5 +1,7 @@
 package jenkobs_reactor
 
+import "fmt"
+
 /*
 	HTTP Action calls specified URL if criterion meets
 */
@@ -7,6 +9,7 @@ package jenkobs_reactor
 // HTTPAction object
 type HTTPAction struct {
 	actionInfo *ActionInfo
+	BaseAction
 }
 
 // NewHTTPAction constructor
@@ -15,17 +18,15 @@ func NewHTTPAction() *HTTPAction {
 	return hta
 }
 
-// GetAction info on request for this action object
-func (hta *HTTPAction) GetAction() *ActionInfo {
-	return hta.actionInfo
-}
-
-// LoadAction info
-func (hta *HTTPAction) LoadAction(action *ActionInfo) {
-	hta.actionInfo = action
-}
-
 // OnMessage when delivery comes, match the criteria according to the action info
 func (hta *HTTPAction) OnMessage(message *ReactorDelivery) error {
+	if !message.IsValid() {
+		return fmt.Errorf("Skipping invalid message")
+	}
+
+	if hta.Matches(message) {
+		fmt.Println("Matches")
+	}
+
 	return nil
 }
