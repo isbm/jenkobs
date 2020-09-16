@@ -223,7 +223,7 @@ func (rtr *Reactor) onDelivery(delivery amqp.Delivery) error {
 	rd := NewReactorDelivery(&delivery)
 	if rd.IsValid() { // Some messages from OBS simply aren't JSON. :-(
 		for _, action := range rtr.actions {
-			go action.OnMessage(rd)
+			action.OnMessage(rd)
 		}
 	}
 	return nil

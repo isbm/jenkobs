@@ -7,6 +7,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	wzlib_logger "github.com/infra-whizz/wzlib/logger"
 	wzlib_subprocess "github.com/infra-whizz/wzlib/subprocess"
+	"github.com/jinzhu/copier"
 )
 
 /*
@@ -29,6 +30,17 @@ type ShellAction struct {
 func NewShellAction() *ShellAction {
 	shellAction := new(ShellAction)
 	return shellAction
+}
+
+// MakeActionInstance creates a self-contained instance copy
+func (shact *ShellAction) MakeActionInstance() interface{} {
+	action := NewShellAction()
+	src := *shact.actionInfo
+	dst := &ActionInfo{}
+	copier.Copy(&dst, &src)
+	action.actionInfo = dst
+
+	return *action
 }
 
 // Format command from the parameters.
@@ -74,9 +86,13 @@ func (shact *ShellAction) OnMessage(message *ReactorDelivery) error {
 		return fmt.Errorf("Skipping invalid message")
 	}
 
-	if shact.Matches(message) {
-		cmd := shact.formatCommand(message)
-		return shact.callShellCommand(cmd[0], cmd[1:]...)
+	action := shact.MakeActionInstance().(ShellAction)
+
+	if action.Matches(message) {
+		cmd := action.formatCommand(message)
+		if len(cmd) > 0 {
+			return action.callShellCommand(cmd[0], cmd[1:]...)
+		}
 	}
 
 	return nil

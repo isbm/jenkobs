@@ -7,12 +7,15 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// ReactorAction interface
 type ReactorAction interface {
-	GetAction() *ActionInfo
+	GetActionInfo() *ActionInfo
+	MakeActionInstance() interface{}
 	LoadAction(action *ActionInfo)
 	OnMessage(message *ReactorDelivery) error
 }
 
+// BaseAction object
 type BaseAction struct {
 	actionInfo *ActionInfo
 	wzlib_logger.WzLogger
@@ -42,8 +45,8 @@ func (bsa *BaseAction) Matches(message *ReactorDelivery) bool {
 	return true
 }
 
-// GetAction info on request for this action object
-func (bsa *BaseAction) GetAction() *ActionInfo {
+// GetActionInfo on request for this action object
+func (bsa *BaseAction) GetActionInfo() *ActionInfo {
 	return bsa.actionInfo
 }
 
@@ -52,12 +55,19 @@ func (bsa *BaseAction) LoadAction(action *ActionInfo) {
 	bsa.actionInfo = action
 }
 
+// MakeActionInstance creates a self-contained instance copy
+func (bsa *BaseAction) MakeActionInstance() interface{} {
+	panic("Make Action Instance is not implemented yet")
+}
+
+// ReactorDelivery object
 type ReactorDelivery struct {
 	content  map[string]interface{}
 	delivery *amqp.Delivery
 	wzlib_logger.WzLogger
 }
 
+// NewReactorDelivery constructor for ReactorDelivery object
 func NewReactorDelivery(delivery *amqp.Delivery) *ReactorDelivery {
 	rd := new(ReactorDelivery)
 	rd.delivery = delivery
