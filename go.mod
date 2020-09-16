@@ -8,9 +8,10 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/infra-whizz/wzlib v0.0.0-20200724114653-1b20fd7a54aa
 	github.com/isbm/go-nanoconf v0.0.0-20200623180822-caf90de1965e
+	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/sirupsen/logrus v1.6.0
 	github.com/streadway/amqp v1.0.0
 	github.com/urfave/cli/v2 v2.2.0
-	golang.org/x/sys v0.0.0-20200915084602-288bc346aa39 // indirect
+	golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
