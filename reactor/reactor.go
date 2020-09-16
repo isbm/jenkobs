@@ -11,6 +11,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// Reactor object
 type Reactor struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
@@ -25,6 +26,7 @@ type Reactor struct {
 	wzlib_logger.WzLogger
 }
 
+// NewReactor constructor
 func NewReactor() *Reactor {
 	rtr := new(Reactor)
 	rtr.actions = make([]ReactorAction, 0)
@@ -57,9 +59,8 @@ func (rtr *Reactor) connectAMQP() error {
 	if err != nil {
 		rtr.GetLogger().Errorf("Error connecting to the AMQP server: %s", err.Error())
 		return err
-	} else {
-		rtr.GetLogger().Infof("Connected to AMQP at %s", rtr.fqdn)
 	}
+	rtr.GetLogger().Infof("Connected to AMQP at %s", rtr.fqdn)
 
 	// Setup channel
 	rtr.channel, err = rtr.conn.Channel()
@@ -67,25 +68,22 @@ func (rtr *Reactor) connectAMQP() error {
 	if err != nil {
 		rtr.GetLogger().Errorf("Error creating AMQP channel: %s", err.Error())
 		return err
-	} else {
-		rtr.GetLogger().Infof("Created AMQP channel")
 	}
+	rtr.GetLogger().Infof("Created AMQP channel")
 
 	// Setup queue
 	rtr.queue, err = rtr.channel.QueueDeclare("", false, false, true, false, nil)
 	if err != nil {
 		rtr.GetLogger().Errorf("Error setting up queue: %s", err.Error())
 		return err
-	} else {
-		rtr.GetLogger().Infof("Default queue declared")
 	}
+	rtr.GetLogger().Infof("Default queue declared")
 
 	if err = rtr.channel.QueueBind(rtr.queue.Name, "#", "pubsub", false, nil); err != nil {
 		rtr.GetLogger().Errorf("Error binding queue '%s' to the channel: %s", rtr.queue.Name, err.Error())
 		return err
-	} else {
-		rtr.GetLogger().Infof("Bound queue '%s' to the channel", rtr.queue.Name)
 	}
+	rtr.GetLogger().Infof("Bound queue '%s' to the channel", rtr.queue.Name)
 
 	return nil
 }
@@ -177,14 +175,13 @@ func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
 			rtr.GetLogger().Warnf("Action on project '%s' with package '%s' does not have defined action type, skipping",
 				action.Project, action.Package)
 			return nil
-		} else {
-			return action
 		}
+		return action
 	}
 	return nil
 }
 
-// LoadConfig of the reactor
+// LoadActions of the reactor
 func (rtr *Reactor) LoadActions(actionsCfgPath string) *Reactor {
 	content, err := ioutil.ReadFile(actionsCfgPath)
 	if err != nil {
