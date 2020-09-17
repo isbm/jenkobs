@@ -24,14 +24,15 @@ func setLogger(ctx *cli.Context) {
 
 func listenOBS(ctx *cli.Context) error {
 	setLogger(ctx)
-	conf := nanoconf.NewConfig(ctx.String("config"))
-	wzlib_logger.GetCurrentLogger().Debug("Connecting to the AMQP")
 
-	amqpConf := conf.Find("amqp")
-	jenkobs_reactor.NewReactor().SetAMQPDial(amqpConf.String("username", ""),
-		amqpConf.String("password", ""), amqpConf.String("fqdn", ""),
-		amqpConf.DefaultInt("port", "", 5672)).LoadActions(conf.Root().String("actions", "")).Run()
-	return nil
+	wzlib_logger.GetCurrentLogger().Debug("Connecting to the AMQP")
+	conf := nanoconf.NewConfig(ctx.String("config"))
+
+	return jenkobs_reactor.NewReactor().
+		SetAMQPAuth(jenkobs_reactor.NewAMQPAuth(conf.Find("amqp"))).
+		SetJenkinsAuth(jenkobs_reactor.NewJenkinsAuth(conf.Find("jenkins"))).
+		LoadActions(conf.Root().String("actions", "")).
+		Run()
 }
 
 func main() {
