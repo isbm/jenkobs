@@ -18,10 +18,8 @@ type Reactor struct {
 	queue   amqp.Queue
 	actions []ReactorAction
 
-	user     string
-	password string
-	fqdn     string
-	port     int
+	amqpAuth    *AMQPAuth
+	jenkinsAuth *JenkinsAuth
 
 	wzlib_logger.WzLogger
 }
@@ -33,34 +31,44 @@ func NewReactor() *Reactor {
 	return rtr
 }
 
-// SetAMQPDial string
-func (rtr *Reactor) SetAMQPDial(user string, password string, fqdn string, port int) *Reactor {
-	rtr.user = user
-	rtr.password = password
-	rtr.fqdn = fqdn
-	rtr.port = port
+// SetJenkinsAuth sets authentication obect for Jenkins
+func (rtr *Reactor) SetJenkinsAuth(jenkinsAuth *JenkinsAuth) *Reactor {
+	rtr.jenkinsAuth = jenkinsAuth
+	return rtr
+
+}
+
+// SetAMQPAuth string
+func (rtr *Reactor) SetAMQPAuth(amqpAuth *AMQPAuth) *Reactor {
+	rtr.amqpAuth = amqpAuth
 	return rtr
 }
 
 func (rtr *Reactor) connectAMQP() error {
-	if rtr.user == "" || rtr.fqdn == "" {
+	if rtr.amqpAuth == nil {
+		return fmt.Errorf("Authentication to AMQP was not initialised")
+	} else if rtr.jenkinsAuth == nil {
+		return fmt.Errorf("Authentication to Jenkins was not initalised")
+	}
+
+	if rtr.amqpAuth.User == "" || rtr.amqpAuth.Fqdn == "" {
 		err := fmt.Errorf("Error connecting to the AMQP server: user or FQDN are missing")
 		rtr.GetLogger().Error(err.Error())
 		return err
 	}
 	var err error
 	var connstr string
-	if rtr.port > 0 {
-		connstr = fmt.Sprintf("amqps://%s:%s@%s:%d/", rtr.user, rtr.password, rtr.fqdn, rtr.port)
+	if rtr.amqpAuth.Port > 0 {
+		connstr = fmt.Sprintf("amqps://%s:%s@%s:%d/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn, rtr.amqpAuth.Port)
 	} else {
-		connstr = fmt.Sprintf("amqps://%s:%s@%s/", rtr.user, rtr.password, rtr.fqdn)
+		connstr = fmt.Sprintf("amqps://%s:%s@%s/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn)
 	}
 	rtr.conn, err = amqp.Dial(connstr)
 	if err != nil {
 		rtr.GetLogger().Errorf("Error connecting to the AMQP server: %s", err.Error())
 		return err
 	}
-	rtr.GetLogger().Infof("Connected to AMQP at %s", rtr.fqdn)
+	rtr.GetLogger().Infof("Connected to AMQP at %s", rtr.amqpAuth.Fqdn)
 
 	// Setup channel
 	rtr.channel, err = rtr.conn.Channel()
@@ -201,6 +209,7 @@ func (rtr *Reactor) LoadActions(actionsCfgPath string) *Reactor {
 			case ACTION_TYPE_CI:
 				httpAction := NewHTTPAction()
 				httpAction.LoadAction(action)
+				httpAction.SetJenkinsAuth(rtr.jenkinsAuth)
 				rtr.actions = append(rtr.actions, httpAction)
 				loaded++
 				rtr.GetLogger().Debugf("Loaded criteria HTTP matcher for project '%s'", action.Project)
