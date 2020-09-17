@@ -12,6 +12,6 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/streadway/amqp v1.0.0
 	github.com/urfave/cli/v2 v2.2.0
-	golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a // indirect
+	golang.org/x/sys v0.0.0-20200917073148-efd3b9a0ff20 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
