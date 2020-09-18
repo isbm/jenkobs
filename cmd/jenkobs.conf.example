@@ -1,0 +1,15 @@
+jenkins:
+  username: john
+  token: 12345
+  hostname: yourjenkins.com
+  port: 8080
+
+amqp:
+  username: opensuse
+  password: opensuse
+  fqdn: rabbit.opensuse.org
+  port: 0  # Disable port specification
+  #port: 5672
+  queue:
+
+actions: actions.conf
