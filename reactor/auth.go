@@ -6,10 +6,12 @@ import (
 
 // AMQPAuth object
 type AMQPAuth struct {
-	User     string
-	Password string
-	Fqdn     string
-	Port     int
+	User         string
+	Password     string
+	Fqdn         string
+	Port         int
+	ExchangeName string
+	Vhost        string
 }
 
 // NewAMQPAuth constructor to AMQPAuth
@@ -19,6 +21,8 @@ func NewAMQPAuth(conf *nanoconf.Inspector) *AMQPAuth {
 	mqa.Password = conf.String("password", "")
 	mqa.Fqdn = conf.String("fqdn", "")
 	mqa.Port = conf.DefaultInt("port", "", 5672)
+	mqa.ExchangeName = conf.String("exchange", "")
+	mqa.Vhost = conf.String("vhost", "")
 
 	return mqa
 }

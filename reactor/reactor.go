@@ -59,10 +59,16 @@ func (rtr *Reactor) connectAMQP() error {
 	var err error
 	var connstr string
 	if rtr.amqpAuth.Port > 0 {
-		connstr = fmt.Sprintf("amqps://%s:%s@%s:%d/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn, rtr.amqpAuth.Port)
+		connstr = fmt.Sprintf("amqp://%s:%s@%s:%d/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn, rtr.amqpAuth.Port)
 	} else {
-		connstr = fmt.Sprintf("amqps://%s:%s@%s/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn)
+		connstr = fmt.Sprintf("amqp://%s:%s@%s/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn)
 	}
+
+	// Append vhost if explicitly specified
+	if rtr.amqpAuth.Vhost != "" {
+		connstr += rtr.amqpAuth.Vhost
+	}
+
 	rtr.conn, err = amqp.Dial(connstr)
 	if err != nil {
 		rtr.GetLogger().Errorf("Error connecting to the AMQP server: %s", err.Error())
@@ -72,7 +78,7 @@ func (rtr *Reactor) connectAMQP() error {
 
 	// Setup channel
 	rtr.channel, err = rtr.conn.Channel()
-	err = rtr.channel.ExchangeDeclarePassive("pubsub", "topic", true, false, false, false, nil)
+	err = rtr.channel.ExchangeDeclarePassive(rtr.amqpAuth.ExchangeName, "topic", true, false, false, false, nil)
 	if err != nil {
 		rtr.GetLogger().Errorf("Error creating AMQP channel: %s", err.Error())
 		return err
@@ -87,7 +93,7 @@ func (rtr *Reactor) connectAMQP() error {
 	}
 	rtr.GetLogger().Infof("Default queue declared")
 
-	if err = rtr.channel.QueueBind(rtr.queue.Name, "#", "pubsub", false, nil); err != nil {
+	if err = rtr.channel.QueueBind(rtr.queue.Name, "#", rtr.amqpAuth.ExchangeName, false, nil); err != nil {
 		rtr.GetLogger().Errorf("Error binding queue '%s' to the channel: %s", rtr.queue.Name, err.Error())
 		return err
 	}
