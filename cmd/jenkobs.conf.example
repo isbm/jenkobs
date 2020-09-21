@@ -10,6 +10,7 @@ amqp:
   fqdn: rabbit.opensuse.org
   port: 0  # Disable port specification
   #port: 5672
+  exchange: pubsub
   queue:
 
 actions: actions.conf
