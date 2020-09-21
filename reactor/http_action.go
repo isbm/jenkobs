@@ -106,7 +106,9 @@ func (hta *HTTPAction) MakeActionInstance() interface{} {
 	action := NewHTTPAction()
 	src := *hta.actionInfo
 	dst := &ActionInfo{}
-	copier.Copy(&dst, &src)
+	if err := copier.Copy(&dst, &src); err != nil {
+		hta.GetLogger().Errorf("Error initialising HTTP call instance: %s", err.Error())
+	}
 	action.actionInfo = dst
 
 	return *action
