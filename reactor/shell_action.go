@@ -70,7 +70,9 @@ func (shact *ShellAction) callShellCommand(name string, args ...string) error {
 		return err
 	}
 	sout, serr := buff.StdoutString(), buff.StderrString()
-	buff.Wait()
+	if err := buff.Wait(); err != nil {
+		return err
+	}
 
 	if serr != "" {
 		shact.GetLogger().Errorf("Error calling command %s: %s", name, serr)
