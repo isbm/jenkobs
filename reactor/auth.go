@@ -12,6 +12,7 @@ type AMQPAuth struct {
 	Port         int
 	ExchangeName string
 	Vhost        string
+	ConnType     string
 }
 
 // NewAMQPAuth constructor to AMQPAuth
@@ -23,6 +24,10 @@ func NewAMQPAuth(conf *nanoconf.Inspector) *AMQPAuth {
 	mqa.Port = conf.DefaultInt("port", "", 5672)
 	mqa.ExchangeName = conf.String("exchange", "")
 	mqa.Vhost = conf.String("vhost", "")
+	mqa.ConnType = conf.String("connection", "")
+	if mqa.ConnType == "" {
+		mqa.ConnType = "ssl"
+	}
 
 	return mqa
 }

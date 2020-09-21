@@ -58,10 +58,14 @@ func (rtr *Reactor) connectAMQP() error {
 	}
 	var err error
 	var connstr string
+	scheme := "amqp"
+	if rtr.amqpAuth.ConnType == "ssl" {
+		scheme += "s"
+	}
 	if rtr.amqpAuth.Port > 0 {
-		connstr = fmt.Sprintf("amqp://%s:%s@%s:%d/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn, rtr.amqpAuth.Port)
+		connstr = fmt.Sprintf("%s://%s:%s@%s:%d/", scheme, rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn, rtr.amqpAuth.Port)
 	} else {
-		connstr = fmt.Sprintf("amqp://%s:%s@%s/", rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn)
+		connstr = fmt.Sprintf("%s://%s:%s@%s/", scheme, rtr.amqpAuth.User, rtr.amqpAuth.Password, rtr.amqpAuth.Fqdn)
 	}
 
 	// Append vhost if explicitly specified
