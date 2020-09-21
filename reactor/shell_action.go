@@ -37,7 +37,9 @@ func (shact *ShellAction) MakeActionInstance() interface{} {
 	action := NewShellAction()
 	src := *shact.actionInfo
 	dst := &ActionInfo{}
-	copier.Copy(&dst, &src)
+	if err := copier.Copy(&dst, &src); err != nil {
+		shact.GetLogger().Errorf("Error copying contents of a shell instance: %s", err.Error())
+	}
 	action.actionInfo = dst
 
 	return *action
