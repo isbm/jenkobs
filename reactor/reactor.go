@@ -82,6 +82,10 @@ func (rtr *Reactor) connectAMQP() error {
 
 	// Setup channel
 	rtr.channel, err = rtr.conn.Channel()
+	if err != nil {
+		rtr.GetLogger().Errorf("Error initialising channel: %s", err.Error())
+		return err
+	}
 	err = rtr.channel.ExchangeDeclarePassive(rtr.amqpAuth.ExchangeName, "topic", true, false, false, false, nil)
 	if err != nil {
 		rtr.GetLogger().Errorf("Error creating AMQP channel: %s", err.Error())
@@ -238,14 +242,15 @@ func (rtr *Reactor) LoadActions(actionsCfgPath string) *Reactor {
 	return rtr
 }
 
-func (rtr *Reactor) onDelivery(delivery amqp.Delivery) error {
+func (rtr *Reactor) onDelivery(delivery amqp.Delivery) {
 	rd := NewReactorDelivery(&delivery)
 	if rd.IsValid() { // Some messages from OBS simply aren't JSON. :-(
 		for _, action := range rtr.actions {
-			action.OnMessage(rd)
+			if err := action.OnMessage(rd); err != nil {
+				rtr.GetLogger().Errorf("Error processing action: %s", err.Error())
+			}
 		}
 	}
-	return nil
 }
 
 func (rtr *Reactor) consume() error {
