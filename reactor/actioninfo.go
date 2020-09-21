@@ -1,9 +1,10 @@
 package jenkobs_reactor
 
-const (
-	ACTION_TYPE_CI    = "ci"
-	ACTION_TYPE_SHELL = "shell"
-)
+// ActionTypeHTTP constant for http action
+const ActionTypeHTTP string = "http"
+
+// ActionTypeShell constant for shell action
+var ActionTypeShell = "shell"
 
 // ActionInfo object
 type ActionInfo struct {

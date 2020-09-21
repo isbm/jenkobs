@@ -115,7 +115,7 @@ func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
 				actionType = pval.(string)
 			} else {
 				switch actionType {
-				case "ci":
+				case ActionTypeHTTP:
 					// Params are key/value with nested key/value for query params
 					paramsItf, ok := pval.(map[interface{}]interface{})
 					if ok {
@@ -138,7 +138,7 @@ func (rtr *Reactor) getAction(actionSet map[string]interface{}) *ActionInfo {
 					} else {
 						rtr.GetLogger().Error("HTTP action does not have a proper caller configuration")
 					}
-				case "shell":
+				case ActionTypeShell:
 					// Params are string array just like a typical command line
 					cmdKeysItf, ok := pval.([]interface{})
 					if ok {
@@ -212,14 +212,14 @@ func (rtr *Reactor) LoadActions(actionsCfgPath string) *Reactor {
 		action := rtr.getAction(actionSet)
 		if action != nil {
 			switch action.Type {
-			case ACTION_TYPE_CI:
+			case ActionTypeHTTP:
 				httpAction := NewHTTPAction()
 				httpAction.LoadAction(action)
 				httpAction.SetJenkinsAuth(rtr.jenkinsAuth)
 				rtr.actions = append(rtr.actions, httpAction)
 				loaded++
 				rtr.GetLogger().Debugf("Loaded criteria HTTP matcher for project '%s'", action.Project)
-			case ACTION_TYPE_SHELL:
+			case ActionTypeShell:
 				shellAction := NewShellAction()
 				shellAction.LoadAction(action)
 				rtr.actions = append(rtr.actions, shellAction)
