@@ -36,14 +36,14 @@ func (hta *HTTPAction) getURL() string {
 	}
 	jkPort := hta.auth.Port
 
-	url, ok := hta.actionInfo.Params["url"]
+	url, ok := hta.actionInfo.Params["query"].(map[string]interface{})["url"]
 	if !ok {
 		hta.GetLogger().Errorln("URL is not defined to the HTTP action. Check your configuration.")
 		return ""
 	}
 
 	out := url.(string)
-	if !strings.HasPrefix(out, "http") && strings.Contains(out, "://") {
+	if !strings.Contains(out, "://") {
 		var buff strings.Builder
 		buff.WriteString("https://")
 		buff.WriteString(jkFqdn)
