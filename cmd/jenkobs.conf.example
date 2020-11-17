@@ -1,7 +1,7 @@
 jenkins:
   username: john
   token: 12345
-  hostname: yourjenkins.com
+  fqdn: yourjenkins.com
   port: 8080
 
 amqp:
