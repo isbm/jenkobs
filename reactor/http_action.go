@@ -110,6 +110,7 @@ func (hta *HTTPAction) MakeActionInstance() interface{} {
 		hta.GetLogger().Errorf("Error initialising HTTP call instance: %s", err.Error())
 	}
 	action.actionInfo = dst
+	action.SetJenkinsAuth(hta.auth)
 
 	return *action
 }
