@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -73,15 +74,28 @@ func (hta *HTTPAction) request(message *ReactorDelivery) error {
 	if !ok {
 		method = "get"
 	}
-	//params := query["params"].(map[string]interface{})
+
+	params := hta.actionInfo.Params["query"].(map[string]interface{})["params"]
+	data := url.Values{}
+	for qkey, qval := range params.(map[string]interface{}) {
+		if qkey == "" {
+			continue
+		} else if qval != nil {
+			data.Add(qkey, qval.(string))
+		} else {
+			data.Add(qkey, "")
+		}
+	}
 
 	switch strings.ToLower(method) {
 	case "post":
-		request, err := http.NewRequest("POST", hta.getURL(), nil)
+		request, err := http.NewRequest("POST", hta.getURL(), strings.NewReader(data.Encode()))
 		if err != nil {
 			return err
 		}
 		request.SetBasicAuth(hta.auth.User, hta.auth.Token)
+		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 		resp, err := http.DefaultClient.Do(request)
 		if err != nil {
 			return err
