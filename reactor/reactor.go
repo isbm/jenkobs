@@ -48,7 +48,7 @@ func (rtr *Reactor) connectAMQP() error {
 	if rtr.amqpAuth == nil {
 		return fmt.Errorf("Authentication to AMQP was not initialised")
 	} else if rtr.jenkinsAuth == nil {
-		return fmt.Errorf("Authentication to Jenkins was not initalised")
+		return fmt.Errorf("Authentication to Jenkins was not initialised")
 	}
 
 	if rtr.amqpAuth.User == "" || rtr.amqpAuth.Fqdn == "" {
