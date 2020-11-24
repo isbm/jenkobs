@@ -5,7 +5,7 @@ P_NAME="jenkobs"
 P_APP="cmd/jenkobs.go"
 P_SRC_DIRS=("reactor" "cmd")
 P_DOC_DIRS=("docs")
-P_FILES=("LICENSE" "README.md" "go.mod")
+P_FILES=("LICENSE" "README.md" "go.mod" "go.sum")
 P_CMD=("Makefile" "jenkobs.conf.example" "actions.conf")
 
 set -e
