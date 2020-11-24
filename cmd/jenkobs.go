@@ -10,6 +10,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var VERSION string = "0.1"
+
 // Setup logger level
 func setLogger(ctx *cli.Context) {
 	var level logrus.Level
@@ -39,7 +41,7 @@ func main() {
 	appname := "jenkobs"
 	confpath := nanoconf.NewNanoconfFinder(appname).DefaultSetup(nil)
 	app := &cli.App{
-		Version: "0.1 Alpha",
+		Version: VERSION,
 		Name:    appname,
 		Usage:   "AMQP reactor for Open Build Service",
 		Action:  listenOBS,
