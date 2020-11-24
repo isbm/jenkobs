@@ -1,5 +1,6 @@
 cmd/jenkobs
 docs/_*
+vendor/
 scripts
 .vscode
 
